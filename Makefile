@@ -3,7 +3,7 @@ GOFMT_FILES?=$$(find . -not -path "./vendor/*" -type f -name '*.go')
 default: check
 
 prebuild:
-	go get -u github.com/nikhilsbhat/go-api-sample
+	go get -u github.com/nikhilsbhat/go-api-sample@charts
 	GOPATH=${GOPATH:-$(go env GOPATH)}
 	cd GOPATH
 # bin generates the releaseable binaries for config
