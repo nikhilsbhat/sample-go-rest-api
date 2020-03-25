@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 )
 
 // FetchIdentity helps in fetching the identities of the person
@@ -30,10 +31,21 @@ var (
 
 // Initialises basic identities during startup of the app.
 func init() {
-	identities = map[int]Identity{
-		1: Identity{FirstName: "John", SecondName: "Doe", Dob: "11/11/2000"},
-		2: Identity{FirstName: "Bob", SecondName: "Builder", Dob: "10/10/2000"},
-		3: Identity{FirstName: "Jag", SecondName: "Dragger", Dob: "9/09/2000"},
+	conf, err := getConfig()
+	if err != nil {
+		fmt.Fprintf(os.Stdout, err.(error).Error())
+		os.Exit(1)
+	}
+	if len(conf.DefaultIdentites) != 0 {
+		for i, idnt := range conf.DefaultIdentites {
+			identities[i] = idnt
+		}
+	} else {
+		identities = map[int]Identity{
+			1: Identity{FirstName: "John", SecondName: "Doe", Dob: "11/11/2000"},
+			2: Identity{FirstName: "Bob", SecondName: "Builder", Dob: "10/10/2000"},
+			3: Identity{FirstName: "Jag", SecondName: "Dragger", Dob: "9/09/2000"},
+		}
 	}
 }
 

@@ -20,13 +20,14 @@ var (
 	config = `{
 		"port": "80",
 		"logpath": "neuron.log"
-   }`
+    }`
 )
 
 // Config required by the sample api app.
 type Config struct {
-	AppPort string `json:"port"`
-	LogPath string `json:"logpath"`
+	AppPort          string     `json:"port"`
+	LogPath          string     `json:"logpath"`
+	DefaultIdentites []Identity `json:"defaults"`
 }
 
 // API enables api for this app.
@@ -38,12 +39,13 @@ func API() {
 	// setting configurations
 	conf, err := getConfig()
 	if err != nil {
-		log.Fatal(err)
+		fmt.Fprintf(os.Stdout, err.(error).Error())
 		os.Exit(1)
 	}
 	if len(conf.LogPath) != 0 {
 		logp, err := conf.configLog()
 		if err != nil {
+			fmt.Fprintf(os.Stdout, err.(error).Error())
 			rout.Apilog = os.Stdout
 		} else {
 			rout.Apilog = logp
@@ -82,13 +84,13 @@ func (c *Config) logstat() bool {
 
 func (c *Config) configLog() (io.Writer, error) {
 	if c.logstat() != true {
-		fmt.Fprintf(os.Stdout, "unable to locate the log file specified, switching to STDOUT\n")
-		return nil, fmt.Errorf("unable to locate the log file specified, switching to STDOUT")
+		//fmt.Fprintf(os.Stdout, "unable to locate the log file specified, switching to STDOUT\n")
+		return nil, fmt.Errorf("unable to locate the log file specified, switching to STDOUT\n")
 	}
 	path, err := os.OpenFile(c.LogPath, os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
-		fmt.Fprintf(os.Stdout, "unable open the log file specified, switching to STDOUT\n")
-		return nil, fmt.Errorf("unable open the log file specified, switching to STDOUT")
+		//fmt.Fprintf(os.Stdout, "unable open the log file specified, switching to STDOUT\n")
+		return nil, fmt.Errorf("unable open the log file specified, switching to STDOUT\n")
 	}
 	return path, nil
 }
