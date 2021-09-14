@@ -1,0 +1,6 @@
+/.idea
+/vendor
+helm-images
+/dist
+cover.out
+go-api-sample
