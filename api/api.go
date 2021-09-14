@@ -12,11 +12,10 @@ import (
 	"sync"
 
 	"github.com/gorilla/mux"
-	decode "github.com/nikhilsbhat/config/decode"
+	"github.com/nikhilsbhat/config/decode"
 )
 
 var (
-	//port   = "8080"
 	config = `{
 		"port": "80",
 		"logpath": "neuron.log"
@@ -31,15 +30,13 @@ type Config struct {
 
 // API enables api for this app.
 func API() {
-
-	//Initializing router to prepare neuron to serve endpoints
+	// Initializing router to prepare neuron to serve endpoints
 	rout := new(MuxIn)
 
 	// setting configurations
 	conf, err := getConfig()
 	if err != nil {
 		log.Fatal(err)
-		os.Exit(1)
 	}
 	if len(conf.LogPath) != 0 {
 		logp, err := conf.configLog()
@@ -59,9 +56,9 @@ func API() {
 		port   string
 	}
 	neurouter := r{router: router, port: conf.AppPort}
-	fmt.Fprintf(os.Stdout, fmt.Sprintf("App is runnig on port: %s", conf.AppPort))
+	log.Printf("App is runnig on port: %s", conf.AppPort)
 	errCh := make(chan error, 1)
-	//starting the neuron on specified port
+	// starting the neuron on specified port
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func(neurouter r) {
@@ -81,23 +78,22 @@ func (c *Config) logstat() bool {
 }
 
 func (c *Config) configLog() (io.Writer, error) {
-	if c.logstat() != true {
-		fmt.Fprintf(os.Stdout, "unable to locate the log file specified, switching to STDOUT\n")
+	if !c.logstat() {
 		return nil, fmt.Errorf("unable to locate the log file specified, switching to STDOUT")
 	}
 	path, err := os.OpenFile(c.LogPath, os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
-		fmt.Fprintf(os.Stdout, "unable open the log file specified, switching to STDOUT\n")
 		return nil, fmt.Errorf("unable open the log file specified, switching to STDOUT")
 	}
 	return path, nil
 }
 
 func getConfig() (Config, error) {
-
 	// fetching the configurations from env variable.
 	if len(os.Getenv("API_CONFIG_PATH")) == 0 {
-		fmt.Fprintf(os.Stdout, "no config file was specified, switching to default config\n")
+		if _, err := fmt.Fprintf(os.Stdout, "no config file was specified, switching to default config\n"); err != nil {
+			return Config{}, err
+		}
 		conf, err := decodeConfig([]byte(config))
 		if err != nil {
 			return Config{}, err
@@ -105,8 +101,10 @@ func getConfig() (Config, error) {
 		return conf, nil
 	}
 
-	if statfile(os.Getenv("API_CONFIG_PATH")) != true {
-		fmt.Fprintf(os.Stdout, "unable to locate the config file specified, switching to default config\n")
+	if !statfile(os.Getenv("API_CONFIG_PATH")) {
+		if _, err := fmt.Fprintf(os.Stdout, "unable to locate the config file specified, switching to default config\n"); err != nil {
+			return Config{}, err
+		}
 		conf, err := decodeConfig([]byte(config))
 		if err != nil {
 			return Config{}, err
@@ -136,7 +134,7 @@ func getConfig() (Config, error) {
 func decodeConfig(cont []byte) (Config, error) {
 	var cnf Config
 	if err := decode.JsonDecode(cont, &cnf); err != nil {
-		return Config{}, fmt.Errorf(("Oops...! an error occured while decoding config file"))
+		return Config{}, fmt.Errorf("oops...! an error occurred while decoding config file")
 	}
 	return cnf, nil
 }

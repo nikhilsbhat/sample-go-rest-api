@@ -12,6 +12,18 @@ builds:
       - linux
       - darwin
 
+dockers:
+  - goos: linux
+    goarch: amd64
+    ids:
+      - terragen
+    skip_push: false
+    image_templates:
+      - "basnik/go-api-sample:latest"
+      - "basnik/go-api-sample:{{ .Tag }}"
+      - "basnik/go-api-sample:{{ .Tag }}-{{ .Env.GOVERSION }}"
+    dockerfile: Dockerfile
+
 archives:
   - format: zip
     replacements:

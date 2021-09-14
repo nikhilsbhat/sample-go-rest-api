@@ -13,11 +13,10 @@ type MuxIn struct {
 
 // NewRouter gives back the router which it created to the function/method who called it.
 func (log *MuxIn) NewRouter() *mux.Router {
-
 	rout := mux.NewRouter().StrictSlash(true)
 	rout.Use(TimeoutHandler)
 
-	//initializing logger with log path
+	// initializing logger with log path
 	test := new(LogInit)
 	test.Logpath = log.Apilog
 	rout.Use(test.Logger)
@@ -28,7 +27,7 @@ func (log *MuxIn) NewRouter() *mux.Router {
 			Path(route.Pattern).
 			Name(route.Name).
 			Handler(route.HandlerFunc)
-		//rout.Use(mid.JsonHandler)
+		// rout.Use(mid.JsonHandler)
 	}
 	return rout
 }

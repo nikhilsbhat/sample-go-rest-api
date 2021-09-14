@@ -1,7 +1,6 @@
 package api
 
 import (
-	"bytes"
 	"context"
 	"io"
 	"log"
@@ -19,20 +18,9 @@ type TimeoutMiddleware struct {
 	Next http.Handler
 }
 
-var (
-	// DefaultTimeoutHandler holds the message that will be thrown when processing time cross the timeout.
-	DefaultTimeoutHandler = http.HandlerFunc(
-		func(res http.ResponseWriter, req *http.Request) {
-			res.WriteHeader(http.StatusGatewayTimeout)
-			res.Write([]byte("Service timeout"))
-		})
+const (
+	timeouts = 30 * time.Second
 )
-
-type timeoutWriter struct {
-	rw     http.ResponseWriter
-	status int
-	buf    *bytes.Buffer
-}
 
 func (tm TimeoutMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if tm.Next == nil {
@@ -40,7 +28,7 @@ func (tm TimeoutMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := r.Context()
-	ctx, _ = context.WithTimeout(ctx, 30*time.Second)
+	ctx, _ = context.WithTimeout(ctx, timeouts)
 	r.WithContext(ctx)
 	ch := make(chan struct{})
 	go func() {
@@ -59,7 +47,7 @@ func (tm TimeoutMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func TimeoutHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		tCtx, tCancel := context.WithTimeout(ctx, 30*time.Second)
+		tCtx, tCancel := context.WithTimeout(ctx, timeouts)
 		cCtx, cCancel := context.WithCancel(ctx)
 		r.WithContext(ctx)
 
@@ -76,7 +64,9 @@ func TimeoutHandler(next http.Handler) http.Handler {
 			if err := tCtx.Err(); err == context.DeadlineExceeded {
 				cCancel()
 				w.WriteHeader(http.StatusGatewayTimeout)
-				w.Write([]byte("Request Timeout, it is taking more than anticipated time to serve request\n"))
+				if _, err := w.Write([]byte("Request Timeout, it is taking more than anticipated time to serve request\n")); err != nil {
+					log.Fatal(err)
+				}
 			}
 		}
 	})
@@ -85,17 +75,16 @@ func TimeoutHandler(next http.Handler) http.Handler {
 // Logger will log all the request served by the neuron through API.
 func (loger *LogInit) Logger(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
 		start := time.Now()
 		next.ServeHTTP(w, r)
 
 		newlog := log.New(loger.Logpath, " [INFO ]", 0)
 		newlog.SetPrefix(logformatter(r, start))
 		newlog.Println()
-		return
 	})
 }
 
 func logformatter(r *http.Request, start time.Time) string {
-	return "[" + start.Format("2006-01-02 15:04:05") + "]" + " - " + r.Method + " " + r.RequestURI + " " + r.RemoteAddr + " " + time.Since(start).String() + " " + r.Proto
+	return "[" + start.Format("2006-01-02 15:04:05") + "]" + " - " + r.Method + " " + r.RequestURI +
+		" " + r.RemoteAddr + " " + time.Since(start).String() + " " + r.Proto
 }

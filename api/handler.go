@@ -31,9 +31,9 @@ var (
 // Initialises basic identities during startup of the app.
 func init() {
 	identities = map[int]Identity{
-		1: Identity{FirstName: "John", SecondName: "Doe", Dob: "11/11/2000"},
-		2: Identity{FirstName: "Bob", SecondName: "Builder", Dob: "10/10/2000"},
-		3: Identity{FirstName: "Jag", SecondName: "Dragger", Dob: "9/09/2000"},
+		1: {FirstName: "John", SecondName: "Doe", Dob: "11/11/2000"},
+		2: {FirstName: "Bob", SecondName: "Builder", Dob: "10/10/2000"},
+		3: {FirstName: "Jag", SecondName: "Dragger", Dob: "9/09/2000"},
 	}
 }
 
@@ -75,7 +75,7 @@ func createIdentity(rw http.ResponseWriter, req *http.Request) {
 			jsonval, _ := json.MarshalIndent(Error{"Unable to unmarshal the entered input. Provide input in valid format"}, "", "  ")
 			fmt.Fprintf(rw, "%v\n", string(jsonval))
 		} else {
-			createIdentityResponse, err := idn.createIdentity()
+			createIdentityResponse := idn.createIdentity()
 			if err != nil {
 				fmt.Fprintf(rw, "%v\n", err)
 			} else {
@@ -100,7 +100,7 @@ func updateIdentity(rw http.ResponseWriter, req *http.Request) {
 			jsonval, _ := json.MarshalIndent(Error{"Unable to unmarshal the entered input. Provide input in valid format"}, "", "  ")
 			fmt.Fprintf(rw, "%v\n", string(jsonval))
 		} else {
-			updateIdentityResponse, err := idn.updateIdentity()
+			updateIdentityResponse := idn.updateIdentity()
 			if err != nil {
 				fmt.Fprintf(rw, "%v\n", err)
 			} else {
@@ -161,19 +161,19 @@ func (i *FetchIdentity) getIdentity() (Identity, error) {
 			return name, nil
 		}
 	}
-	return Identity{}, fmt.Errorf("Oops...!! Identity not found")
+	return Identity{}, fmt.Errorf("oops...!! Identity not found")
 }
 
 // createIdentity creates the identity and returns all the identities that has been managed by the app so far.
-func (i *FetchIdentity) createIdentity() (Identity, error) {
-	return i.Identity, nil
+func (i *FetchIdentity) createIdentity() Identity {
+	return i.Identity
 }
 
 // updateIdentity updates the identity and returns the updated list of identities.
-func (i *FetchIdentity) updateIdentity() (map[int]Identity, error) {
+func (i *FetchIdentity) updateIdentity() map[int]Identity {
 	length := len(identities)
 	identities[(length + 1)] = Identity{FirstName: i.Identity.FirstName, SecondName: i.Identity.SecondName, Dob: i.Identity.Dob}
-	return identities, nil
+	return identities
 }
 
 // deleteIdentity delets the identity and returns the updated list of identities after deletion.
@@ -185,5 +185,5 @@ func (i *FetchIdentity) deleteIdentity() (map[int]Identity, error) {
 		return identities, nil
 	}
 
-	return nil, fmt.Errorf("Oops...!! Unable to delete the Identity")
+	return nil, fmt.Errorf("oops...!! Unable to delete the Identity")
 }
